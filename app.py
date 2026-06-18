@@ -45,7 +45,7 @@ custom_css = """
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-st.markdown("<h2 class='custom-title'>🤖 Peak Solution AI</h2>", unsafe_allow_html=True)
+st.markdown("<h2 class='custom-title'>🤖 CID </h2>", unsafe_allow_html=True)
 st.markdown("<p class='custom-subtitle'>Powered by Groq + Llama 3.1</p>", unsafe_allow_html=True)
 
 # =========================
