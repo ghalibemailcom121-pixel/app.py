@@ -53,7 +53,7 @@ st.markdown("<p class='custom-subtitle'>Powered by Groq + Llama 3.1</p>", unsafe
 # =========================
 # Option 1:
 # Put your key directly (NOT recommended for production)
-client = Groq(api_key="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")
+client = Groq(api_key="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")
 
 # =========================
 # SESSION STATE
