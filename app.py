@@ -1,128 +1,100 @@
-# app.py
-
 import streamlit as st
 from groq import Groq
+import urllib.parse
 
-# =========================
-# PAGE CONFIG
-# =========================
-st.set_page_config(
-    page_title="AI Chatbot",
-    page_icon="🤖",
-    layout="centered"
-)
+# Page Configuration
+st.set_page_config(page_title="Groq Powered AI Assistant", page_icon="⚡", layout="wide")
 
-# =========================
-# CUSTOM CSS & UI OVERHAUL
-# =========================
-custom_css = """
-<style>
-    /* Hide Streamlit default UI elements */
-    #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* Clean up the padding */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-    
-    /* Custom header styling */
-    .custom-title {
-        text-align: center;
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        margin-bottom: 0px;
-    }
-    .custom-subtitle {
-        text-align: center;
-        font-size: 0.9rem;
-        color: #888;
-        margin-bottom: 2rem;
-    }
-</style>
-"""
-st.markdown(custom_css, unsafe_allow_html=True)
+# API Keys Setup
+GROQ_API_KEY = "YOUR_GROQ_API_KEY_HERE"  # <--- Apni Groq Key Yahan Dalein
 
-st.markdown("<h2 class='custom-title'>🤖 CID </h2>", unsafe_allow_html=True)
-st.markdown("<p class='custom-subtitle'>Powered by Groq + Llama 3.1</p>", unsafe_allow_html=True)
+if GROQ_API_KEY == "YOUR_GROQ_API_KEY_HERE":
+    st.warning("⚠️ Please apni Groq API Key code mein enter karein!")
+else:
+    # Groq Client Initialize karein
+    client = Groq(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)
 
-# =========================
-# GROQ API KEY
-# =========================
-# Option 1:
-# Put your key directly (NOT recommended for production)
-client = Groq(api_key="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")
+st.title("⚡ Ultra-Fast Groq AI Assistant")
+st.write("Groq LPU ki speed, Image Generation, aur Professional Tone ke sath.")
 
-# =========================
-# SESSION STATE
-# =========================
+# Chat history initialize karein
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful AI assistant."
-        }
-    ]
+    st.session_state.messages = []
 
-# =========================
-# DISPLAY CHAT HISTORY
-# =========================
-for message in st.session_state.messages[1:]:
-    avatar = "👤" if message["role"] == "user" else "🤖"
-    with st.chat_message(message["role"], avatar=avatar):
-        st.markdown(message["content"])
+# Sidebar for Features
+with st.sidebar:
+    st.header("⚙️ Settings & Features")
+    st.markdown("""
+    - **Engine:** Groq LPU (Ultra Fast)
+    - **Model:** `llama-3.3-70b-versatile` (Highly Professional)
+    - **Image Generation:** Message ke shuru mein **"generate image:"** likhein.
+    """)
+    
+    st.subheader("🎤 Voice Input")
+    audio_value = st.audio_input("Record your voice")
 
-# =========================
-# USER INPUT
-# =========================
-prompt = st.chat_input("Ask something...")
+# Display old messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        if message["type"] == "text":
+            st.markdown(message["content"])
+        elif message["type"] == "image":
+            st.image(message["content"], caption="Generated Image")
 
-if prompt:
+# User Input
+text_input = st.chat_input("Groq se kuch bhi poochahein...")
+user_query = text_input if text_input else ""
 
-    # Show user message
-    with st.chat_message("user", avatar="👤"):
-        st.markdown(prompt)
+# Processing the input
+if user_query:
+    # 1. Display User Message
+    with st.chat_message("user"):
+        st.markdown(user_query)
+    st.session_state.messages.append({"role": "user", "type": "text", "content": user_query})
 
-    # Save user message
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": prompt
-        }
-    )
+    # 2. Check for IMAGE generation request
+    if user_query.lower().startswith("generate image:"):
+        prompt = user_query.split("generate image:")[1].strip()
+        
+        with st.chat_message("assistant"):
+            with st.spinner("🖼️ Generating professional visual..."):
+                encoded_prompt = urllib.parse.quote(prompt)
+                image_url = f"https://image.pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed=42"
+                
+                st.image(image_url, caption=f"Result for: {prompt}")
+                st.session_state.messages.append({"role": "assistant", "type": "image", "content": image_url})
 
-    # =========================
-    # AI RESPONSE
-    # =========================
-    with st.chat_message("assistant", avatar="🤖"):
+    # 3. Handle TEXT with Groq (Professional Persona)
+    else:
+        with st.chat_message("assistant"):
+            with st.spinner("⚡ Groq Processing..."):
+                try:
+                    # Professional System Prompt
+                    system_prompt = (
+                        "You are a highly professional, polite, and elite AI Corporate Assistant. "
+                        "Always respond in a helpful, respectful, and sophisticated manner. "
+                        "Avoid slang or informal language. If the user asks in Urdu/Hindi, "
+                        "respond in polite, formal Roman Urdu or proper Urdu script. "
+                        "Keep your safety filters high and refuse any inappropriate or harmful requests politely."
+                    )
 
-        message_placeholder = st.empty()
-        full_response = ""
-
-        stream = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=st.session_state.messages,
-            temperature=0.7,
-            max_tokens=1024,
-            stream=True
-        )
-
-        for chunk in stream:
-
-            content = chunk.choices[0].delta.content
-
-            if content:
-                full_response += content
-                message_placeholder.markdown(full_response + "▌")
-
-        message_placeholder.markdown(full_response)
-
-    # Save assistant response
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": full_response
-        }
-    )
+                    # Groq API Call
+                    # Note: Llama-3.3-70b-versatile provides highly accurate and professional reasoning.
+                    # content moderation and search intent are handled via advanced prompting here.
+                    completion = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            # Aap chahein toh yahan puri st.session_state.messages ki history bhi pass kar sakte hain
+                            {"role": "user", "content": user_query}
+                        ],
+                        temperature=0.3, # Low temperature keeps it professional and factual
+                        max_tokens=1024,
+                    )
+                    
+                    bot_response = completion.choices[0].message.content
+                    st.markdown(bot_response)
+                    st.session_state.messages.append({"role": "assistant", "type": "text", "content": bot_response})
+                    
+                except Exception as e:
+                    st.error(f"Groq System Error: {e}")
